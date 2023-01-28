@@ -4,6 +4,8 @@ from moviepy.editor import *
 from proglog import ProgressBarLogger
 from pytube import YouTube
 from pytube import Playlist
+from PIL import Image
+import pytesseract
 import requests
 import os
 
@@ -103,12 +105,24 @@ with st.container():
         if(password == true_password):
             st.sidebar.success("Successfully loggged in as admin")
             with st.expander("ADMIN PORTAL"):
-                file_uploads = st.file_uploader("Upoad your file")
+                size = 0
+                for items in os.listdir():
+                    file_size = os.stat(items).st_size / (1024 * 1024)
+                    size += file_size
+                if(800 - size < 200):
+                    st.error(str(round(800 - size,2)) + " MB/800 MB")
+                elif (800 - size > 200 and 800 - size < 600):
+                    st.warning(str(round(800 - size,2)) + " MB/800 MB")
+                elif (800 - size > 600):
+                    st.success(str(round(800 - size,2)) + " MB/800 MB")
+                file_uploads = st.file_uploader("Upload your file",accept_multiple_files=True)
                 if file_uploads:
-                    with open(file_uploads.name, "wb") as f:
-                        f.write(file_uploads.read())
-                    st.success(file_uploads.name + " uploaded successfully!")
+                    for upload in file_uploads:
+                        with open(upload.name, "wb") as f:
+                            f.write(upload.read())
+                    st.success("uploaded successfully!")
                 files = ["--select--"]
+                show_files = ["--select--"]
                 for items in os.listdir(os.getcwd()):
                     if (".idea" in items):
                         pass
@@ -122,9 +136,10 @@ with st.container():
                         pass
                     else:
                         files.append(items)
-                sec = st.selectbox("Choose the file you want to delete: ",files)
+                        show_files.append(items + " " + str(round(os.stat(items).st_size / (1024*1024),2)) + " MB")
+                sec = st.selectbox("Choose the file you want to delete: ",show_files)
                 if(sec != "--select--"):
-                    os.remove(sec)
+                    os.remove(files[show_files.index(sec)])
                     st.success("Successfully deleted " + sec)
         else:
             st.sidebar.error("Incorrect id/password")
@@ -211,6 +226,17 @@ with st.container():
             os.remove(video)
             os.remove(audio)
 
+with st.container():
+    st.header("Convert Image to text")
+    file = st.file_uploader("Upload your image file here",type=['png','jpeg','jpg'])
+    if(file):
+        with open(file.name, 'wb') as s:
+            s.write(file.read())
+        image = Image.open(file.name)
+        txt = pytesseract.image_to_string(image, lang='eng')
+        st.success("Conversion successfull")
+        st.code(txt, language="Python")
+        os.remove(file.name)
 
 with st.container():
     st.header("Youtube video downloader: ")
