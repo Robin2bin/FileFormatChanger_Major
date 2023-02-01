@@ -78,20 +78,38 @@ def mix_vid(video,audio):
     vid_duration = Video.duration
     audio_duration = Audio.duration
     output = 'final_video.mp4'
+    final_clip = None
     if (vid_duration < audio_duration or vid_duration > audio_duration):
-        Audio = AudioFileClip(audio)
-        Video = VideoFileClip(video).fx(speedx, vid_duration / audio_duration)
-        final_clip = Video.set_audio(Audio)
+        conv_type = ['--Select--', 'Merge files anyway', 'Cut the extra portion and merge']
+        select_type = st.selectbox("Your video and audio length are not similar choose the below action: ",conv_type)
+        if(select_type != "--Select--"):
+            if(select_type == 'Merge files anyway'):
+                Audio = AudioFileClip(audio)
+                Video = VideoFileClip(video).fx(speedx, vid_duration / audio_duration)
+                final_clip = Video.set_audio(Audio)
+            elif(select_type == 'Cut the extra portion and merge'):
+                if(vid_duration > audio_duration):
+                    Audio = AudioFileClip(audio)
+                    Video = VideoFileClip(video).subclip(0,Audio.duration)
+                    final_clip = Video.set_audio(Audio)
+                elif(audio_duration > vid_duration):
+                    Video = VideoFileClip(video)
+                    Audio = AudioFileClip(audio).subclip(0,Video.duration)
+                    final_clip = Video.set_audio(Audio)
     else:
         Video = VideoFileClip(video)
         Audio = AudioFileClip(audio)
         final_clip = Video.set_audio(Audio)
-    final_clip.write_videofile(output, logger=logger)
-    st.success("Successfull conversion")
-    st.video(output)  # shows the video
-    os.remove(output)
-    Video.close()
-    Audio.close()
+    if(final_clip):
+        final_clip.write_videofile(output, logger=logger)
+        st.success("Successfull conversion")
+        st.video(output)  # shows the video
+        os.remove(output)
+        Video.close()
+        Audio.close()
+        return True
+    return False
+
 
 with st.container():
     st.title("Format Changer App")
@@ -222,9 +240,10 @@ with st.container():
         if(video and audio):
             st.success("Successfully got the files now processing for results...")
             status = st.progress(0)
-            mix_vid(video,audio)
-            os.remove(video)
-            os.remove(audio)
+            result = mix_vid(video,audio)
+            if(result):
+                os.remove(video)
+                os.remove(audio)
 
 with st.container():
     st.header("Convert Image to text")
