@@ -73,6 +73,7 @@ def video2audio(video):
     os.remove(output)
 
 def mix_vid(video,audio):
+    result = False
     Video = VideoFileClip(video)
     Audio = AudioFileClip(audio)
     vid_duration = Video.duration
@@ -107,8 +108,8 @@ def mix_vid(video,audio):
         os.remove(output)
         Video.close()
         Audio.close()
-        return True
-    return False
+        result = True
+    return result
 
 
 with st.container():
@@ -181,28 +182,56 @@ with st.container():
         elif(online_File):
             Download = YouTube(online_File)
             try:
-                st.write("Here is your audio file => " + "[View/Download](" +
-                         Download.streams.filter(type="audio",mime_type="audio/mp4")[0].url + ")")
+                st.warning("Getting your video file....")
+                r = requests.get(Download.streams.filter(resolution='144p',progressive = True)[0].url,stream=True)
+                file_size = int(Download.streams.filter(resolution='144p',progressive=True)[0].filesize)
+                st.warning("Downloading the video..... " + str(round(file_size/1048576 ,2)) + " MB")
+                status = st.progress(0)
+                with open('video.mp4','wb') as f:
+                    downloaded = 0
+                    for data in r.iter_content(chunk_size=1024):
+                        f.write(data)
+                        downloaded += len(data)
+                        progress = (downloaded / file_size) * 100
+                        status.progress(int(progress))
+                video2audio('video.mp4')
+                os.remove('video.mp4')
             except Exception as e:
-                st.error("This video has no audio")
-
+                st.error(e)
+        st.subheader("Combine images to a video")
+        images = st.file_uploader("Choose the image files: ",type = ['png','jpeg','jpg'],accept_multiple_files=True)
+        clips = []
+        if(images):
+            for image in images:
+                with open(image.name,'wb') as source:
+                    source.write(image.read())
+                image = Image.open(image.name)
+                image.resize((1920,1080))
+                image.save('temp_image.png')
+                clips.append(ImageClip('temp_image.png').set_duration(5))
+                os.remove('temp_image.png')
+            status = st.progress(0)
+            concat_clip = concatenate_videoclips(clips, method="compose")
+            concat_clip.write_videofile("output.mp4", fps=24,logger=logger)
+            st.video('output.mp4')
+            os.remove('output.mp4')
+            for image in images:
+                os.remove(image.name)
     with right:
         st.subheader("Combine audio and video files: ")
-        video = None
-        audio = None
         video_file = st.file_uploader("Choose your video file: ",type=['mp4','avi'])
         st.write("OR")
         online_video_File = st.text_input("Enter video youtube link: ")
         audio_file = st.file_uploader("Choose your audio file: ",type=['mp3','wav'])
         st.write("OR")
         online_audio_File = st.text_input("Enter audio youtube link: ")
-        if(video == None):
+        if('video.mp4' not in os.listdir()):
             if(online_video_File):
                 st.warning("Getting your video file....")
                 video = "video.mp4"
                 Download = YouTube(online_video_File)
                 file_size = int(Download.streams.filter(only_video=True, file_extension='mp4')[0].filesize)
-                r = requests.get(Download.streams.filter(only_video=True, file_extension='mp4')[0].url)
+                r = requests.get(Download.streams.filter(only_video=True, file_extension='mp4')[0].url,stream=True)
                 st.warning("Downloading your video file...." + str(round(file_size / 1048576, 2)) + " MB")
                 status = st.progress(0)
                 with open(video, 'wb') as f:
@@ -216,12 +245,12 @@ with st.container():
                 video = video_file.name
                 with open(video, "wb") as f:
                     f.write(video_file.read())
-        if(audio == None):
+        if('audio.wav' not in os.listdir()):
             if(online_audio_File):
                 st.warning("Getting your audio file...")
                 audio = "audio.wav"
                 Download = YouTube(online_audio_File)
-                r = requests.get(Download.streams.filter(type="audio",mime_type="audio/mp4")[0].url)
+                r = requests.get(Download.streams.filter(type="audio",mime_type="audio/mp4")[0].url,stream=True)
                 file_size = int(Download.streams.filter(type="audio",mime_type="audio/mp4")[0].filesize)
                 st.warning("Downloading your audio file...." + str(round(file_size / 1048576,2)) + " MB")
                 status = st.progress(0)
@@ -237,9 +266,11 @@ with st.container():
                 with open(audio, "wb") as f:
                     f.write(audio_file.read())
 
-        if(video and audio):
+        if('video.mp4' in os.listdir()  and 'audio.wav' in os.listdir()):
             st.success("Successfully got the files now processing for results...")
             status = st.progress(0)
+            video = 'video.mp4'
+            audio = 'audio.wav'
             result = mix_vid(video,audio)
             if(result):
                 os.remove(video)
