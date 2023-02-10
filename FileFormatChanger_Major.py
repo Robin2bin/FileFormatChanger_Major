@@ -182,22 +182,30 @@ with st.container():
         elif(online_File):
             Download = YouTube(online_File)
             try:
-                st.warning("Getting your video file....")
-                r = requests.get(Download.streams.filter(resolution='144p',progressive = True)[0].url,stream=True)
-                file_size = int(Download.streams.filter(resolution='144p',progressive=True)[0].filesize)
-                st.warning("Downloading the video..... " + str(round(file_size/1048576 ,2)) + " MB")
-                status = st.progress(0)
-                with open('video.mp4','wb') as f:
-                    downloaded = 0
-                    for data in r.iter_content(chunk_size=1024):
-                        f.write(data)
-                        downloaded += len(data)
-                        progress = (downloaded / file_size) * 100
-                        status.progress(int(progress))
-                video2audio('video.mp4')
-                os.remove('video.mp4')
+                file = Download.streams.filter(only_audio=True)[0].url
+                st.write("Here is your file => [View/Download](" + file + ")")
             except Exception as e:
-                st.error(e)
+                try:
+                    #trying to download the video and then processing the output from the downloaded video
+                    st.warning("Getting the video file...")
+                    file = Download.streams.filter(only_audio=True)[0].url
+                    file_size = Download.streams.filter(only_audio=True)[0].filesize
+                    r = requests.get(file,stream=True)
+                    st.warning("Downloading your video file...." + str(round(file_size / 1048576, 2)) + " MB")
+                    status = st.progress(0)
+                    with open('video.mp4', 'wb') as f:
+                        downloaded = 0
+                        for data in r.iter_content(chunk_size=1024):
+                            f.write(data)
+                            downloaded += len(data)
+                            progress = (downloaded / file_size) * 100
+                            status.progress(int(progress))
+                    st.success("Now processing the audio from the video...")
+                    video2audio('video.mp4')
+                    os.remove('video.mp4')
+                except Exception as e:
+                    st.error(e)
+
         st.subheader("Combine images to a video")
         images = st.file_uploader("Choose the image files: ",type = ['png','jpeg','jpg'],accept_multiple_files=True)
         clips = []
