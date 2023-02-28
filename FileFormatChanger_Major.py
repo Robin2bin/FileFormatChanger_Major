@@ -51,15 +51,7 @@ def Youtube_casts(url):
         st.success("You choose: " + res)
         st.write("Here is your file => " + "[View/Download](" +
                  Download.streams.filter(resolution=res, progressive=True)[0].url + ")")
-        st.info("Not happy with the resolutions available! You can download upto 1080p with our desktop app try now")
-        items = os.getcwd() + "/Robin2bin-Video2audio-Desktop.zip"
-        with open(items, "rb") as file:
-            btn = st.download_button(
-                label='Download desktop application here' + " (" + f'{round(os.stat(items).st_size / (1024 * 1024), 1)}' + " MB)",
-                data=file,
-                file_name='Robin2bin-Video2audio-Desktop.zip',
-                mime="application/octet-stream"
-            )
+        st.info("Not happy with the resolutions available! You can download upto 1080p with our desktop app \n[Try Now](https://drive.google.com/drive/folders/1-Rb5KRR5PLQXCYZAwlL1pnJiYiU7zSGI?usp=share_link)")
 
 def video2audio(video):
     output = "audio_file.wav"
@@ -329,13 +321,6 @@ with st.container():
     with right_middle:
         st.subheader("Want to get more feature?")
         st.write("Try our desktop app version: ")
-        items = os.getcwd() + "/Robin2bin-Video2audio-Desktop.zip"
-        with open(items, "rb") as file:
-            btn = st.download_button(
-                label= 'Robin2bin-Video2audio-Desktop.zip' + " (" + f'{round(os.stat(items).st_size / (1024 * 1024),1)}' + " MB)",
-                data=file,
-                file_name='Robin2bin-Video2audio-Desktop.zip',
-                mime="application/octet-stream"
-            )
+        st.write("[Download from here](https://drive.google.com/drive/folders/1-Rb5KRR5PLQXCYZAwlL1pnJiYiU7zSGI?usp=sharing)")
     with right:
         st.image("https://yt3.ggpht.com/ytc/AMLnZu-iZi_tq1cWBc90QKMCe3WSRXDn7L_ny9i57CSj=s900-c-k-c0x00ffffff-no-rj",width=200)
