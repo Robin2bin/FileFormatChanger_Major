@@ -243,7 +243,7 @@ with st.container():
                         status.progress(int(progress))
             if (video_file):
                 video = video_file.name
-                with open(video, "wb") as f:
+                with open('video.mp4', "wb") as f:
                     f.write(video_file.read())
         if('audio.wav' not in os.listdir()):
             if(online_audio_File):
@@ -263,7 +263,7 @@ with st.container():
                         status.progress(int(progress))
             if (audio_file):
                 audio = audio_file.name
-                with open(audio, "wb") as f:
+                with open('audio.wav', "wb") as f:
                     f.write(audio_file.read())
 
         if('video.mp4' in os.listdir()  and 'audio.wav' in os.listdir()):
