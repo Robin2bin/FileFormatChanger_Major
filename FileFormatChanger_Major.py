@@ -140,6 +140,8 @@ with st.container():
                         with open(upload.name, "wb") as f:
                             f.write(upload.read())
                     st.success("uploaded successfully!")
+                for file in os.listdir():
+                    st.write(os.getcwd() + "\\" + file)
                 files = ["--select--"]
                 show_files = ["--select--"]
                 for items in os.listdir(os.getcwd()):
