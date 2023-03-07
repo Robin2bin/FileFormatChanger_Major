@@ -140,8 +140,6 @@ with st.container():
                         with open(upload.name, "wb") as f:
                             f.write(upload.read())
                     st.success("uploaded successfully!")
-                for file in os.listdir():
-                    st.write(os.getcwd() + "\\" + file)
                 files = ["--select--"]
                 show_files = ["--select--"]
                 for items in os.listdir(os.getcwd()):
@@ -149,7 +147,11 @@ with st.container():
                         pass
                     elif ("requirements.txt" in items):
                         pass
-                    elif (".py" in items):
+                    elif ("packages.txt" in items):
+                        pass
+                    elif ("FileFormatChanger_Major.py" in items):
+                        pass
+                    elif ("FileFormatChanger_Major - OlderVersion backup.py" in items):
                         pass
                     elif (".git" in items):
                         pass
