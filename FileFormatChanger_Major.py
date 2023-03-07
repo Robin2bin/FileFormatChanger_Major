@@ -1,9 +1,12 @@
+import shutil
+from io import BytesIO
 from moviepy.video.fx.speedx import speedx
 import streamlit as st
 from moviepy.editor import *
 from proglog import ProgressBarLogger
 from pytube import YouTube
 from pytube import Playlist
+from zipfile import ZipFile
 from PIL import Image
 import pytesseract
 import requests
@@ -40,7 +43,12 @@ set_background = """
                 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 #st.markdown(set_background, unsafe_allow_html=True)
-
+def getEnv():
+    if "STREAMLIT_SERVER_URL" in os.environ:
+        env = "Production"
+    else:
+        env = "Local"
+    return env
 def Youtube_casts(url):
     Download = YouTube(url)
     resolutions = ["--select--"]
@@ -278,15 +286,28 @@ with st.container():
 
 with st.container():
     st.header("Convert Image to text")
-    file = st.file_uploader("Upload your image file here",type=['png','jpeg','jpg'])
-    if(file):
-        with open(file.name, 'wb') as s:
-            s.write(file.read())
-        image = Image.open(file.name)
-        txt = pytesseract.image_to_string(image, lang='eng')
-        st.success("Conversion successfull")
-        st.code(txt)
-        os.remove(file.name)
+    Image_file = st.file_uploader("Upload your image file here",type=['png','jpeg','jpg'])
+    if(Image_file):
+        if(getEnv() == 'Local'): #offline mode
+            image = Image.open(BytesIO(Image_file.read()))
+            pytesseract_zip = st.file_uploader("Upload your pytesseract file", type=['zip'])
+            if (pytesseract_zip):
+                with open(pytesseract_zip.name, 'wb') as pytz:
+                    pytz.write(pytesseract_zip.read())
+                with ZipFile(pytesseract_zip, 'r') as zipFile:
+                    zipFile.extractall(os.getcwd() + "\\" + pytesseract_zip.name.replace(".zip", ''))
+                    os.remove(pytesseract_zip.name)
+                pytesseract.pytesseract.tesseract_cmd = os.getcwd() + "\\" + pytesseract_zip.name.replace(".zip",'') + "\\tesseract.exe"
+                txt = pytesseract.image_to_string(image, lang='eng')
+                st.success("Conversion successfull")
+                st.code(txt)
+                shutil.rmtree(os.getcwd() + "\\" + pytesseract_zip.name.replace(".zip", ''))
+        else:
+            image = Image.open(BytesIO(Image_file.read()))
+            txt = pytesseract.image_to_string(image, lang='eng')
+            st.success("Conversion successfull")
+            st.code(txt)
+        image.close()
 
 with st.container():
     st.header("Youtube video downloader: ")
