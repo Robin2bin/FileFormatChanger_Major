@@ -44,7 +44,7 @@ set_background = """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 #st.markdown(set_background, unsafe_allow_html=True)
 def getEnv():
-    if 'app' in os.listdir():
+    if 'app' not in os.listdir():
         env = "Production"
     else:
         env = "Local"
